@@ -3,13 +3,14 @@ use std::path::PathBuf;
 
 use kitty_desktop::{
     config_service::render_config_json, normalize_extra_args,
-    session_service::render_sessions_json, ConfigService, DesktopConfig, KittyAdapter,
-    KittyLaunchConfig, SessionService, SessionTemplate,
+    session_service::render_sessions_json, ConfigService, DesktopConfig, DesktopShell,
+    KittyAdapter, KittyLaunchConfig, SessionService, SessionTemplate,
 };
 
 fn print_usage() {
     eprintln!(
-        "kitty_desktop core-adapter CLI\n\nUsage:\n  kitty_desktop version\n  kitty_desktop launch [--directory DIR] [--shell SHELL] [--session FILE] [--title TITLE] [--config FILE] [--dry-run] [-- ...extra args]\n  kitty_desktop config show [--config-path FILE]\n  kitty_desktop config set [--config-path FILE] [--directory DIR] [--shell SHELL] [--title TITLE] [--kitty-config FILE]\n  kitty_desktop session list [--session-path FILE]\n  kitty_desktop session save --name NAME [--session-path FILE] [--directory DIR] [--shell SHELL] [--title TITLE] [-- ...extra args]"
+        "kitty_desktop core-adapter CLI\n\nUsage:\n  kitty_desktop version\n  kitty_desktop launch [--directory DIR] [--shell SHELL] [--session FILE] [--title TITLE] [--config FILE] [--dry-run] [-- ...extra args]\n  kitty_desktop config show [--config-path FILE]\n  kitty_desktop config set [--config-path FILE] [--directory DIR] [--shell SHELL] [--title TITLE] [--kitty-config FILE]\n  kitty_desktop session list [--session-path FILE]\n  kitty_desktop session save --name NAME [--session-path FILE] [--directory DIR] [--shell SHELL] [--title TITLE] [-- ...extra args]
+  kitty_desktop shell run [--config-path FILE] [--session-path FILE]"
     );
 }
 
@@ -96,6 +97,7 @@ fn main() {
         }
         "config" => handle_config_command(&args),
         "session" => handle_session_command(&args),
+        "shell" => handle_shell_command(&args),
         _ => {
             print_usage();
             std::process::exit(2);
@@ -298,5 +300,42 @@ fn handle_session_command(args: &[String]) {
             print_usage();
             std::process::exit(2);
         }
+    }
+}
+
+fn handle_shell_command(args: &[String]) {
+    if args.len() < 3 || args[2].as_str() != "run" {
+        print_usage();
+        std::process::exit(2);
+    }
+
+    let mut config_path = default_config_path();
+    let mut session_path = default_session_path();
+    let mut i = 3usize;
+
+    while i < args.len() {
+        match args[i].as_str() {
+            "--config-path" => {
+                i += 1;
+                ensure_value(args, i, "--config-path");
+                config_path = PathBuf::from(&args[i]);
+            }
+            "--session-path" => {
+                i += 1;
+                ensure_value(args, i, "--session-path");
+                session_path = PathBuf::from(&args[i]);
+            }
+            _ => {
+                eprintln!("unknown shell flag: {}", args[i]);
+                std::process::exit(2);
+            }
+        }
+        i += 1;
+    }
+
+    let shell = DesktopShell::new(config_path, session_path);
+    if let Err(err) = shell.run_with_stdio() {
+        eprintln!("ERROR: {err}");
+        std::process::exit(1);
     }
 }

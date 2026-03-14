@@ -13,7 +13,7 @@
 - `core-adapter`：`kitty` 可执行文件探测、版本读取、启动参数拼装、启动 dry-run
 - `config-service`：桌面配置 JSON 落盘与读取
 - `session-service`：会话模板 JSON 落盘、更新、查询与列表
-- CLI 子命令：`version` / `launch` / `config show|set` / `session list|save`
+- CLI 子命令：`version` / `launch` / `config show|set` / `session list|save` / `shell run`
 
 ## 目录结构（当前）
 
@@ -23,6 +23,7 @@ kitty_desktop/
 │  ├─ lib.rs               # core-adapter + 公共导出
 │  ├─ config_service.rs    # 配置服务
 │  ├─ session_service.rs   # 会话服务
+│  ├─ desktop_shell.rs     # 最小桌面壳层编排（启动/设置/退出）
 │  └─ main.rs              # CLI 入口
 ├─ tests/
 │  └─ core_adapter_cli.rs
@@ -68,6 +69,15 @@ cargo run -- session save --name dev --directory /work --title Dev -- --single-i
 cargo run -- session list
 ```
 
+
+### 7) 进入最小 desktop shell 交互
+
+```bash
+cargo run -- shell run
+```
+
+支持命令：`settings` / `launch [session_name]` / `exit`。
+
 ## 实现计划（基于上游 kitty）
 
 ### Phase 0：上游对齐与技术预研
@@ -81,7 +91,7 @@ cargo run -- session list
 - [x] Rust `core-adapter` 基础 PoC
 - [x] 最小 `config-service`（配置表单落盘）
 - [x] 最小 `session-service`（保存与恢复会话）
-- [ ] 最小 `desktop-shell`（启动 / 设置 / 退出）
+- [x] 最小 `desktop-shell`（启动 / 设置 / 退出）
 
 ### Phase 2：可用性增强
 
