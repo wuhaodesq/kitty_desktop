@@ -1,0 +1,12 @@
+[package]
+name = "kitty_desktop"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "kitty_desktop"
+path = "src/lib.rs"
+
+[[bin]]
+name = "kitty_desktop"
+path = "src/main.rs"
