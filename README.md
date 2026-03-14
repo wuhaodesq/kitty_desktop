@@ -13,7 +13,7 @@
 - `core-adapter`：`kitty` 可执行文件探测、版本读取、启动参数拼装、启动 dry-run
 - `config-service`：桌面配置 JSON 落盘与读取
 - `session-service`：会话模板 JSON 落盘、更新、查询与列表
-- CLI 子命令：`version` / `launch` / `config show|set` / `session list|save` / `shell run`
+- CLI 子命令：`version` / `launch` / `config show|set` / `session list|save` / `shell run` / `doctor`
 
 ## 目录结构（当前）
 
@@ -77,6 +77,15 @@ cargo run -- shell run
 ```
 
 支持命令：`settings` / `launch [session_name]` / `exit`。
+
+
+### 8) 运行环境诊断
+
+```bash
+cargo run -- doctor
+```
+
+用于检查 kitty 可执行文件、配置加载、会话读取等关键健康项。
 
 ## 实现计划（基于上游 kitty）
 

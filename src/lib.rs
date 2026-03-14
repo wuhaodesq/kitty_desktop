@@ -1,5 +1,6 @@
 pub mod config_service;
 pub mod desktop_shell;
+pub mod diagnostics;
 pub mod session_service;
 
 use std::env;
@@ -252,4 +253,5 @@ mod tests {
 
 pub use config_service::{ConfigService, DesktopConfig};
 pub use desktop_shell::DesktopShell;
+pub use diagnostics::{run_diagnostics, DiagnosticsReport};
 pub use session_service::{SessionService, SessionTemplate};

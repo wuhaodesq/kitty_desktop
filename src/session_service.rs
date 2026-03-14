@@ -34,6 +34,10 @@ impl SessionService {
         Self { session_store_path }
     }
 
+    pub fn store_path(&self) -> &PathBuf {
+        &self.session_store_path
+    }
+
     pub fn list_sessions(&self) -> Result<Vec<SessionTemplate>, KittyAdapterError> {
         if !self.session_store_path.exists() {
             return Ok(Vec::new());

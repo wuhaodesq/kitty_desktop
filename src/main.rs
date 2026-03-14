@@ -2,7 +2,7 @@ use std::env;
 use std::path::PathBuf;
 
 use kitty_desktop::{
-    config_service::render_config_json, normalize_extra_args,
+    config_service::render_config_json, normalize_extra_args, run_diagnostics,
     session_service::render_sessions_json, ConfigService, DesktopConfig, DesktopShell,
     KittyAdapter, KittyLaunchConfig, SessionService, SessionTemplate,
 };
@@ -10,7 +10,8 @@ use kitty_desktop::{
 fn print_usage() {
     eprintln!(
         "kitty_desktop core-adapter CLI\n\nUsage:\n  kitty_desktop version\n  kitty_desktop launch [--directory DIR] [--shell SHELL] [--session FILE] [--title TITLE] [--config FILE] [--dry-run] [-- ...extra args]\n  kitty_desktop config show [--config-path FILE]\n  kitty_desktop config set [--config-path FILE] [--directory DIR] [--shell SHELL] [--title TITLE] [--kitty-config FILE]\n  kitty_desktop session list [--session-path FILE]\n  kitty_desktop session save --name NAME [--session-path FILE] [--directory DIR] [--shell SHELL] [--title TITLE] [-- ...extra args]
-  kitty_desktop shell run [--config-path FILE] [--session-path FILE]"
+  kitty_desktop shell run [--config-path FILE] [--session-path FILE]
+  kitty_desktop doctor [--config-path FILE] [--session-path FILE]"
     );
 }
 
@@ -98,6 +99,7 @@ fn main() {
         "config" => handle_config_command(&args),
         "session" => handle_session_command(&args),
         "shell" => handle_shell_command(&args),
+        "doctor" => handle_doctor_command(&args),
         _ => {
             print_usage();
             std::process::exit(2);
@@ -337,5 +339,48 @@ fn handle_shell_command(args: &[String]) {
     if let Err(err) = shell.run_with_stdio() {
         eprintln!("ERROR: {err}");
         std::process::exit(1);
+    }
+}
+
+fn handle_doctor_command(args: &[String]) {
+    let mut config_path = default_config_path();
+    let mut session_path = default_session_path();
+    let mut i = 2usize;
+
+    while i < args.len() {
+        match args[i].as_str() {
+            "--config-path" => {
+                i += 1;
+                ensure_value(args, i, "--config-path");
+                config_path = PathBuf::from(&args[i]);
+            }
+            "--session-path" => {
+                i += 1;
+                ensure_value(args, i, "--session-path");
+                session_path = PathBuf::from(&args[i]);
+            }
+            _ => {
+                eprintln!("unknown doctor flag: {}", args[i]);
+                std::process::exit(2);
+            }
+        }
+        i += 1;
+    }
+
+    let adapter = KittyAdapter::default();
+    let config_service = ConfigService::new(config_path);
+    let session_service = SessionService::new(session_path);
+
+    match run_diagnostics(&adapter, &config_service, &session_service) {
+        Ok(report) => {
+            println!("{}", report.render_text());
+            if !report.is_healthy() {
+                std::process::exit(1);
+            }
+        }
+        Err(err) => {
+            eprintln!("ERROR: {err}");
+            std::process::exit(1);
+        }
     }
 }
