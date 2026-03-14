@@ -1,3 +1,6 @@
+pub mod config_service;
+pub mod session_service;
+
 use std::env;
 use std::error::Error;
 use std::fmt;
@@ -245,3 +248,6 @@ mod tests {
         }
     }
 }
+
+pub use config_service::{ConfigService, DesktopConfig};
+pub use session_service::{SessionService, SessionTemplate};

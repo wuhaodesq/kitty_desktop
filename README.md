@@ -8,29 +8,31 @@
 
 ## 当前实现进度
 
-已从第一步重新开始，落地 **Rust 版 core-adapter PoC**：
+已完成 **Phase 1 核心服务最小化实现**：
 
-- `kitty` 可执行文件探测（PATH）
-- 版本读取（`kitty --version`）
-- 启动参数拼装（工作目录、title、config、session、shell、extra args）
-- Rust CLI 入口（支持 `version` / `launch --dry-run`）
+- `core-adapter`：`kitty` 可执行文件探测、版本读取、启动参数拼装、启动 dry-run
+- `config-service`：桌面配置 JSON 落盘与读取
+- `session-service`：会话模板 JSON 落盘、更新、查询与列表
+- CLI 子命令：`version` / `launch` / `config show|set` / `session list|save`
 
 ## 目录结构（当前）
 
 ```text
 kitty_desktop/
 ├─ src/
-│  ├─ lib.rs               # core-adapter：探测、版本读取、启动命令拼装
-│  └─ main.rs              # CLI 入口（version/launch）
+│  ├─ lib.rs               # core-adapter + 公共导出
+│  ├─ config_service.rs    # 配置服务
+│  ├─ session_service.rs   # 会话服务
+│  └─ main.rs              # CLI 入口
 ├─ tests/
 │  └─ core_adapter_cli.rs
 ├─ Cargo.toml
 └─ README.md
 ```
 
-## 快速开始（Rust PoC）
+## 快速开始
 
-### 1) 检查版本
+### 1) 检查 kitty 版本
 
 ```bash
 cargo run -- version
@@ -42,10 +44,28 @@ cargo run -- version
 cargo run -- launch --directory . --title kitty_desktop --dry-run
 ```
 
-### 3) 带额外参数预览
+### 3) 保存桌面默认配置
 
 ```bash
-cargo run -- launch --dry-run -- --single-instance
+cargo run -- config set --directory /work --title dev --shell /bin/zsh
+```
+
+### 4) 查看配置
+
+```bash
+cargo run -- config show
+```
+
+### 5) 保存会话模板
+
+```bash
+cargo run -- session save --name dev --directory /work --title Dev -- --single-instance
+```
+
+### 6) 列出会话模板
+
+```bash
+cargo run -- session list
 ```
 
 ## 实现计划（基于上游 kitty）
@@ -59,6 +79,13 @@ cargo run -- launch --dry-run -- --single-instance
 ### Phase 1：MVP 可运行版本
 
 - [x] Rust `core-adapter` 基础 PoC
+- [x] 最小 `config-service`（配置表单落盘）
+- [x] 最小 `session-service`（保存与恢复会话）
 - [ ] 最小 `desktop-shell`（启动 / 设置 / 退出）
-- [ ] 最小 `config-service`（配置表单落盘）
-- [ ] 最小 `session-service`（保存与恢复会话）
+
+### Phase 2：可用性增强
+
+- 主题实时预览
+- 快捷键冲突检测
+- 启动失败诊断（路径、权限、参数错误）
+- 增加常用模板（开发/运维/远程）
